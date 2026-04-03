@@ -99,7 +99,8 @@
 
   .download-btn {
     display: inline-block;
-    margin-top: 15px;
+    margin-top: 5px;
+    margin-block: 5px;
     padding: 10px 20px;
     background: #409eff;
     color: white;
@@ -273,7 +274,7 @@
 </div>
 
 <div class="footer">
-  Copyright © 2026 Staff Hacker Alliance<br>
+  <span style="font-size=15px">网盘由 Blue Cloud 驱动</span><br>
   All Rights Reserved.
 </div>
 
@@ -300,7 +301,7 @@ function fetchData(fileId, pwd=""){
   fileListDiv.style.display = 'none';
   passwordBox.style.display = 'none';
 
-  fetch(`https://你的api域名.pages.dev/?url=https://www.lanzouq.com/${fileId}${pwd ? '&pwd='+pwd : ''}`)
+  fetch(`https://lz-pan-api.pages.dev/?url=https://www.lanzouq.com/${fileId}${pwd ? '&pwd='+pwd : ''}`)
     .then(res=>res.json())
     .then(data=>{
       if(data.code===200){
@@ -374,7 +375,7 @@ function showFileList(data){
           <th data-key="name">文件名</th>
           <th data-key="size">大小</th>
           <th data-key="time">日期</th>
-          <th>操作</th>
+          <th style="width: 85px;">操作</th>
         </tr>
       </thead>
       <tbody>
@@ -465,7 +466,7 @@ function showFileList(data){
 
 function getFileIcon(filename){
   const ext = filename.split('.').pop().toLowerCase();
-  const common = ['png','jpg','jpeg','pdf','txt','html','doc','docx','xls','xlsx','ppt','pptx','exe','apk','ipa'];
+  const common = ['png','jpg','jpeg','pdf','txt','html','doc','docx','xls','xlsx','ppt','pptx','exe','apk','ipa', 'zip', 'rar', '7z'];
   return common.includes(ext) ? `${ext}.svg` : 'simple.svg';
 }
 </script>
