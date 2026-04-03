@@ -778,13 +778,20 @@ class LanzouParser {
                 parameter[key] = value;
             }
         }
-        // 匹配以 ib 开头的变量
-        const tMatch = js.match(/var\s+(ib\w*)\s*=\s*'([^']+)'/);
-        if (tMatch) parameter.t = tMatch[2];
-
-        // 匹配以 _h 开头的变量
-        const kMatch = js.match(/var\s+(_h\w*)\s*=\s*'([^']+)'/);
-        if (kMatch) parameter.k = kMatch[2];
+        // 1. 先匹配 AJAX data 中 t 和 k 对应的变量名
+        const tVarMatch = js.match(/['"]t['"]\s*:\s*([a-zA-Z_]\w*)/);
+        const kVarMatch = js.match(/['"]k['"]\s*:\s*([a-zA-Z_]\w*)/);
+        if (tVarMatch) {
+          const tVarName = tVarMatch[1];
+          // 从 js 里匹配该变量的赋值
+          const tValMatch = js.match(new RegExp(`var\\s+${tVarName}\\s*=\\s*'([^']*)'`));
+          if (tValMatch) parameter.t = tValMatch[1];
+        }
+        if (kVarMatch) {
+          const kVarName = kVarMatch[1];
+          const kValMatch = js.match(new RegExp(`var\\s+${kVarName}\\s*=\\s*'([^']*)'`));
+          if (kValMatch) parameter.k = kValMatch[1];
+        }
         
         const info = {
             fid: parseInt(parameter.fid) || 0,
