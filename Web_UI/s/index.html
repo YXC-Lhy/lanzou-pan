@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>蓝云网盘分享</title>
+<link rel="icon" href="/img/logo.svg" type="image/svg+xml">
+<style>
+  /* 全局 */
+  html, body {
+    margin: 0;
+    padding: 0;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    height: 100%;
+    background: url('/img/background.png') center/cover no-repeat;
+    color: #333;
+    transition: background 0.3s, color 0.3s;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    body {
+      color: #eee;
+    }
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  /* 顶部网站名和图标 */
+  .header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 10px 0;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .header:hover {
+    background: rgba(255,255,255,0.2);
+  }
+  .header img {
+    height: 24px;
+    margin-right: 8px;
+  }
+
+  /* 主体 */
+  .container {
+    max-width: 700px;
+    margin: 80px auto 40px;
+    background: rgba(255,255,255,0.25);
+    backdrop-filter: blur(15px);
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+    color: inherit;
+  }
+
+  .loading {
+    text-align: center;
+    padding: 40px 0;
+  }
+
+  .file-info {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    text-align: left;
+  }
+
+  .file-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .file-header img {
+    width: 48px;
+    height: 48px;
+  }
+
+  .file-name {
+    font-size: 1.2em;
+    font-weight: bold;
+    word-break: break-all;
+  }
+
+  .file-desc {
+    font-size: 0.9em;
+    color: #666;
+  }
+
+  .file-meta {
+    font-size: 0.85em;
+    color: #999;
+  }
+
+  .download-btn {
+    display: inline-block;
+    margin-top: 15px;
+    padding: 10px 20px;
+    background: #409eff;
+    color: white;
+    border-radius: 8px;
+    cursor: pointer;
+    text-align: center;
+  }
+
+  .download-btn:disabled {
+    background: #aaa;
+    cursor: not-allowed;
+  }
+
+  .password-box {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+  }
+
+  .password-box input {
+    flex: 1;
+    padding: 8px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+  }
+
+  .password-box button {
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: none;
+    background: #409eff;
+    color: white;
+    cursor: pointer;
+  }
+
+  /* 文件列表 */
+  .folder-header {
+    display: flex;
+    align-items: center;
+    font-weight: bold;
+    gap: 10px;
+    margin-bottom: 12px;
+    font-size: 1.1em;
+  }
+
+  .folder-header img {
+    width: 24px;
+    height: 24px;
+  }
+
+  .file-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .file-table thead th {
+    text-align: left;
+    padding: 8px;
+    cursor: pointer;
+    background: rgba(255,255,255,0.2);
+    border-bottom: 1px solid #ccc;
+    user-select: none;
+  }
+
+  .file-table tbody tr {
+    transition: background 0.2s;
+    cursor: pointer;
+  }
+
+  .file-table tbody tr:hover {
+    background: rgba(64,158,255,0.1);
+  }
+
+  .file-table td {
+    padding: 8px;
+    vertical-align: middle;
+  }
+
+  .file-table td.download-cell {
+    text-align: right;
+  }
+
+  /* Loader */
+  .loader {
+    margin: auto auto;
+    --size: 40px;
+    --thickness: 4px;
+    --color: #4f7cff;
+    --angle: 70deg;
+    --bg: #f4f6f9a6;
+    width: var(--size);
+    height: var(--size);
+    border-radius: 50%;
+    background-color: var(--bg);
+    background-image: conic-gradient(
+        var(--color) 0deg var(--angle),
+        transparent var(--angle) 360deg
+    );
+    -webkit-mask: radial-gradient(
+        farthest-side,
+        transparent calc(100% - var(--thickness)),
+        #000 0
+    );
+    mask: radial-gradient(
+        farthest-side,
+        transparent calc(100% - var(--thickness)),
+        #000 0
+    );
+    animation: spin 1s linear infinite;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+.btn-loader {
+    margin: auto auto;
+    --size: 50px;       /* 整体大小 */
+    --thickness: 6px;   /* 圆环粗细 */
+    --angle: 120deg;     /* 弧度长度 */
+    --color: #ffffff;   /* 弧颜色 */
+
+    width: var(--size);
+    height: var(--size);
+    border-radius: 50%;
+
+    /* 弧段 */
+    background: conic-gradient(
+        var(--color) 0deg var(--angle),
+        transparent var(--angle) 360deg
+    );
+
+    /* 挖空中间控制粗细 */
+    -webkit-mask: radial-gradient(
+        circle,
+        transparent calc(50% - var(--thickness)),
+        #000 calc(50% - var(--thickness) + 1px)
+    );
+    mask: radial-gradient(
+        circle,
+        transparent calc(50% - var(--thickness)),
+        #000 calc(50% - var(--thickness) + 1px)
+    );
+
+    animation: spin 1s linear infinite;
+}
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+    /* 底部 */
+  .footer {
+    text-align: center;
+    padding: 20px 0;
+    font-size: 0.8em;
+    color: #999;
+  }
+</style>
+</head>
+<body>
+
+<div class="header" onclick="window.location='/'">
+  <img src="/img/logo.svg" alt="Logo"> 蓝云网盘分享
+</div>
+
+<div class="container">
+  <div id="loading" class="loading"><div class="loader" style="--size: 50px; --thickness: 5px;"></div><br>加载中...</div>
+  <div id="file-info" class="file-info" style="display:none;"></div>
+  <div id="file-list" style="display:none;"></div>
+  <div id="password" class="password-box" style="display:none;">
+    <input type="password" id="pwd-input" placeholder="请输入密码">
+    <button onclick="submitPwd()">确定</button>
+  </div>
+</div>
+
+<div class="footer">
+  Copyright © 2026 Staff Hacker Alliance<br>
+  All Rights Reserved.
+</div>
+
+<script>
+const loading = document.getElementById('loading');
+const fileInfoDiv = document.getElementById('file-info');
+const fileListDiv = document.getElementById('file-list');
+const passwordBox = document.getElementById('password');
+const pwdInput = document.getElementById('pwd-input');
+
+const urlPath = window.location.pathname;
+const idMatch = urlPath.match(/\/s\/(.+)/);
+if(!idMatch){
+  loading.textContent = "无效链接";
+} else {
+  const fileId = idMatch[1];
+  let pwdParam = new URLSearchParams(window.location.search).get('pwd') || "";
+  fetchData(fileId, pwdParam);
+}
+
+function fetchData(fileId, pwd=""){
+  loading.style.display = 'block';
+  fileInfoDiv.style.display = 'none';
+  fileListDiv.style.display = 'none';
+  passwordBox.style.display = 'none';
+
+  fetch(`https://lz-pan-api.pages.dev/?url=https://www.lanzouq.com/${fileId}${pwd ? '&pwd='+pwd : ''}`)
+    .then(res=>res.json())
+    .then(data=>{
+      if(data.code===200){
+        if(data.list && data.list.length > 0){
+          showFileList(data);
+        } else {
+          showFileInfo(data);
+        }
+      } else if(data.code===201 || data.msg==='请输入密码'){
+        // 需要密码
+        loading.style.display = 'none';
+        passwordBox.style.display = 'flex';
+        if(pwdInput) pwdInput.focus();
+      } else if(data.success===false){
+        alert("密码错误");
+        passwordBox.style.display = 'flex';
+        pwdInput.value = "";
+        pwdInput.focus();
+      } else {
+        loading.textContent = "未知错误";
+      }
+    }).catch(err=>{
+      loading.textContent = "请求失败";
+      console.error(err);
+    });
+}
+
+function submitPwd(){
+  const pwd = pwdInput.value.trim();
+  const fileId = window.location.pathname.match(/\/s\/(.+)/)[1];
+  if(pwd){
+    fetchData(fileId, pwd);
+  }
+}
+
+function showFileInfo(data){
+  loading.style.display = 'none';
+  fileInfoDiv.style.display = 'flex';
+  fileListDiv.style.display = 'none';
+  fileInfoDiv.innerHTML = `
+    <div class="file-header">
+      <img src="/img/icon/${getFileIcon(data.name)}" alt="文件类型">
+      <div class="file-name">${data.name}</div>
+    </div>
+    <div class="file-desc">${data.desc}</div>
+    <div class="file-meta">
+      大小: ${data.filesize} | 分享人: ${data.user} | 日期: ${data.time}
+    </div>
+    <div class="download-btn" onclick="window.location='${data.downUrl}'">立即下载</div>
+  `;
+  document.title = `${data.name} - 蓝云网盘分享`;
+}
+
+// ---------------- 文件列表显示 ----------------
+let currentSort = { key: 'name', asc: true };
+
+function showFileList(data){
+  loading.style.display = 'none';
+  fileInfoDiv.style.display = 'none';
+  fileListDiv.style.display = 'block';
+  document.title = `${data.name} - 蓝云网盘分享`;
+
+  fileListDiv.innerHTML = `
+    <div class="folder-header">
+      <img src="/img/icon/folder.svg"> ${data.name}
+    </div>
+    <div style="color:#666;font-size:0.9em;">${data.desc || ''}</div>
+    <table class="file-table">
+      <thead>
+        <tr>
+          <th data-key="name">文件名</th>
+          <th data-key="size">大小</th>
+          <th data-key="time">日期</th>
+          <th>操作</th>
+        </tr>
+      </thead>
+      <tbody>
+      </tbody>
+    </table>
+  `;
+  const tbody = fileListDiv.querySelector('tbody');
+
+  function renderRows(list){
+    tbody.innerHTML = '';
+    list.forEach(f=>{
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="name-cell"><img src="/img/icon/${getFileIcon(f.name)}" style="width:24px;height:24px;margin-right:6px;vertical-align:middle;"> ${f.name}</td>
+        <td>${f.size}</td>
+        <td>${f.time}</td>
+        <td class="download-cell"><div class="download-btn" style="padding:4px 10px;width:60px">下载</div></td>
+      `;
+      // 点击整行跳转
+      tr.querySelector('.name-cell').parentElement.addEventListener('click', e=>{
+        if(!e.target.classList.contains('download-btn')){
+          window.location='/s/'+f.id;
+        }
+      });
+
+      // 下载按钮
+      const btn = tr.querySelector('.download-btn');
+      btn.addEventListener('click', e=>{
+        e.stopPropagation();
+        
+        btn.innerHTML = `<div class="btn-loader" style="--size:17px; --thickness:0.4px;"></div>`;
+        fetch(`https://lz-pan-api.pages.dev/?url=https://www.lanzouq.com/${f.id}`)
+          .then(r=>r.json())
+          .then(d=>{
+            if(d.code===200){
+              window.open(d.downUrl,'_blank');
+            } else {
+              alert('下载失败');
+            }
+          })
+          .finally(()=>btn.innerHTML = "下载");
+      });
+
+      tbody.appendChild(tr);
+    });
+  }
+
+  function sortAndRender(){
+    const sorted = [...data.list].sort((a,b)=>{
+      const key = currentSort.key;
+      let va = a[key], vb = b[key];
+      if(key==='size'){ // 解析成数字
+        va = parseFloat(va) || 0;
+        vb = parseFloat(vb) || 0;
+      }
+      if(key==='time'){ // 不做额外处理，按原字符串倒序
+        va = va.toLowerCase(); vb=vb.toLowerCase();
+      }
+      if(va<vb) return currentSort.asc?-1:1;
+      if(va>vb) return currentSort.asc?1:-1;
+      return 0;
+    });
+    renderRows(sorted);
+    // 更新箭头显示
+    fileListDiv.querySelectorAll('thead th[data-key]').forEach(th => {
+      const key = th.dataset.key;
+      let arrow = '';
+      if (currentSort.key === key) {
+        arrow = currentSort.asc ? '  ∧' : '  ∨'; // 上升/下降箭头
+      }
+      th.innerText = th.innerText.replace(/[ ∧∨]$/, ''); // 移除已有箭头
+      th.innerText += arrow;
+    });
+  }
+
+  // 排序点击事件
+  fileListDiv.querySelectorAll('thead th[data-key]').forEach(th=>{
+    th.addEventListener('click', ()=>{
+      const key = th.dataset.key;
+      if(currentSort.key===key) currentSort.asc = !currentSort.asc;
+      else { currentSort.key=key; currentSort.asc=true; }
+      sortAndRender();
+    });
+  });
+
+  sortAndRender();
+}
+
+function getFileIcon(filename){
+  const ext = filename.split('.').pop().toLowerCase();
+  const common = ['png','jpg','jpeg','pdf','txt','html','doc','docx','xls','xlsx','ppt','pptx','exe','apk','ipa'];
+  return common.includes(ext) ? `${ext}.svg` : 'simple.svg';
+}
+</script>
+
+</body>
+</html>
