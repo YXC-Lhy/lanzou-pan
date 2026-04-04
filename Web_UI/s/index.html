@@ -301,7 +301,7 @@ function fetchData(fileId, pwd=""){
   fileListDiv.style.display = 'none';
   passwordBox.style.display = 'none';
 
-  fetch(`https://lz-pan-api.pages.dev/?url=https://www.lanzouq.com/${fileId}${pwd ? '&pwd='+pwd : ''}`)
+  fetch(`https://<你的蓝奏api域名>.pages.dev/?url=https://www.lanzouq.com/${fileId}${pwd ? '&pwd='+pwd : ''}`)
     .then(res=>res.json())
     .then(data=>{
       if(data.code===200){
