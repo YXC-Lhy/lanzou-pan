@@ -1,3 +1,4 @@
 /s/* /s/ 200
+/api/share https://你的api域名.pages.dev/ 307
 /img/icon/rar.svg /img/icon/zip.svg 200
 /img/icon/7z.svg /img/icon/zip.svg 200
